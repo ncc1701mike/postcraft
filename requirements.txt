@@ -1,0 +1,10 @@
+langgraph
+langchain-anthropic
+langchain-community
+supabase
+python-dotenv
+fastapi
+uvicorn
+httpx
+pydantic
+beautifulsoup4
