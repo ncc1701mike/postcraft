@@ -1,11 +1,87 @@
+'use client'
+
+import { useState } from 'react'
+import BriefPanel from '@/components/BriefPanel'
+import ResultsPanel from '@/components/ResultsPanel'
+import VoicePanel from '@/components/VoicePanel'
+import Header from '@/components/Header'
+
+export type ScoreAnnotation = {
+  criterion: string
+  note: string
+}
+
+export type PlatformDraft = {
+  platform: string
+  post_text: string
+  revision_count: number
+  score_brief: number | null
+  score_platform: number | null
+  score_hook: number | null
+  score_factual: number | null
+  score_cta: number | null
+  score_voice: number | null
+  score_weighted: number | null
+  score_annotations: ScoreAnnotation[]
+  passed: boolean | null
+}
+
+export type GenerateResponse = {
+  drafts: PlatformDraft[]
+  run_complete: boolean
+  workspace_id: string
+}
+
 export default function Home() {
+  const [drafts, setDrafts]       = useState<PlatformDraft[]>([])
+  const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState<string | null>(null)
+  const [voiceOpen, setVoiceOpen] = useState(false)
+
+  const handleGenerate = async (briefText: string, briefUrl: string) => {
+    setLoading(true)
+    setError(null)
+    setDrafts([])
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const res = await fetch(`${apiUrl}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brief_text: briefText,
+          brief_url: briefUrl || null,
+          workspace_id: '00000000-0000-0000-0000-000000000001',
+        }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.detail || 'Generation failed')
+      }
+
+      const data: GenerateResponse = await res.json()
+      setDrafts(data.drafts)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Postcraft</h1>
-        <p className="text-gray-500 text-lg">From rough brief to platform-ready posts.</p>
-        <p className="text-gray-400 text-sm mt-2">Pipeline coming soon.</p>
-      </div>
-    </main>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+        <VoicePanel open={voiceOpen} onToggle={() => setVoiceOpen(v => !v)} />
+        <BriefPanel onGenerate={handleGenerate} loading={loading} />
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {drafts.length > 0 && <ResultsPanel drafts={drafts} />}
+      </main>
+    </div>
   )
 }
