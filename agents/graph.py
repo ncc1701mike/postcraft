@@ -363,7 +363,8 @@ def revision_gate(state: PostcraftState) -> PostcraftState:
 
     pending = []
     for draft in (state.get("drafts") or []):
-        already_revised = draft.get("revision_count", 0) >= 1
+        max_revisions = 2 if draft.get("platform") == "instagram" else 1
+        already_revised = draft.get("revision_count", 0) >= max_revisions
         if not draft.get("passed") and not already_revised:
             pending.append(draft["platform"])
             print(f"  {draft['platform']} failed (score: {draft.get('score_weighted')}) — queuing revision")
