@@ -7,10 +7,10 @@ const PHRASES = [
   { text: 'Posts out.', color: '#1D9E75' },
 ]
 
-const PARTICLE_COUNT = 400
+const PARTICLE_COUNT = 800
 const HOLD_MS = 2500
 const TRAVEL_MS = 1000
-const FONT_SIZE = 52
+const FONT_SIZE = 44
 
 type Dot = {
   id: number
@@ -40,8 +40,8 @@ function sampleDots(
 
   const imageData = ctx.getImageData(0, 0, W, H)
   const pixels: Array<{ x: number; y: number }> = []
-  for (let y = 0; y < H; y += 2) {
-    for (let x = 0; x < W; x += 2) {
+  for (let y = 0; y < H; y += 1) {
+    for (let x = 0; x < W; x += 1) {
       const idx = (y * W + x) * 4
       if (imageData.data[idx + 3] > 128) pixels.push({ x, y })
     }
@@ -85,7 +85,7 @@ export default function ParticleTitle() {
     const container = containerRef.current
     if (!container) return
     const W = container.offsetWidth || 700
-    const H = FONT_SIZE + 32
+    const H = FONT_SIZE + 48
     const result = sampleDots(PHRASES[idx].text, W, H, PARTICLE_COUNT)
     if (!result) {
       timerRef.current = setTimeout(() => loadPhrase(idx), 150)
@@ -124,7 +124,7 @@ export default function ParticleTitle() {
   }, [loadPhrase])
 
   const phrase = PHRASES[phraseIdx]
-  const H = FONT_SIZE + 32
+  const H = FONT_SIZE + 48
 
   return (
     <div
@@ -138,12 +138,24 @@ export default function ParticleTitle() {
       }}
     >
       {dots.map((dot) => {
-        const gathered   = stage === 'gathered'
-        const dissolving = stage === 'dissolving'
+        const isScattered  = stage === 'scattered'
+        const isGathered   = stage === 'gathered'
+        const isDissolving = stage === 'dissolving'
 
-        const left    = gathered ? dot.tx : dot.sx
-        const top     = gathered ? dot.ty : dot.sy
-        const opacity = dissolving ? 0 : gathered ? 1 : 0
+        // Position: scattered when not yet gathered, target when gathered OR dissolving
+        const left = isScattered ? dot.sx : dot.tx
+        const top  = isScattered ? dot.sy : dot.ty
+
+        // Opacity: 0 when scattered, 1 when gathered, 0 when dissolving
+        const opacity = isGathered ? 1 : 0
+
+        // Transition: animate position+opacity when gathering, only opacity when dissolving, nothing when scattering
+        let transition = 'none'
+        if (isGathered) {
+          transition = `left ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, top ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, opacity ${TRAVEL_MS * 0.6}ms ease ${dot.delay}ms`
+        } else if (isDissolving) {
+          transition = `opacity ${TRAVEL_MS}ms ease ${dot.delay}ms`
+        }
 
         return (
           <div
@@ -157,12 +169,8 @@ export default function ParticleTitle() {
               borderRadius: '50%',
               background:   phrase.color,
               opacity,
-              transition: gathered
-                ? `left ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, top ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, opacity ${TRAVEL_MS * 0.6}ms ease ${dot.delay}ms`
-                : dissolving
-                ? `opacity ${TRAVEL_MS}ms ease ${dot.delay}ms`
-                : 'none',
-              willChange: 'left, top, opacity',
+              transition,
+              willChange:   'left, top, opacity',
             }}
           />
         )
