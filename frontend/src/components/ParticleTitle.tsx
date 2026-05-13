@@ -7,7 +7,7 @@ const PHRASES = [
   { text: 'Posts out.', color: '#1D9E75' },
 ]
 
-const PARTICLE_COUNT = 3000
+const PARTICLE_COUNT = 4000
 const HOLD_MS = 2500
 const TRAVEL_MS = 1000
 const FONT_SIZE = 56
