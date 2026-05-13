@@ -152,9 +152,9 @@ export default function ParticleTitle() {
         // Transition: animate position+opacity when gathering, only opacity when dissolving, nothing when scattering
         let transition = 'none'
         if (isGathered) {
-          transition = `left ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, top ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, opacity ${TRAVEL_MS * 0.6}ms ease ${dot.delay}ms`
+          transition = `left ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, top ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, opacity ${TRAVEL_MS * 0.6}ms ease ${dot.delay}ms, border-radius ${TRAVEL_MS * 0.8}ms ease ${dot.delay}ms, width ${TRAVEL_MS * 0.8}ms ease ${dot.delay}ms, height ${TRAVEL_MS * 0.8}ms ease ${dot.delay}ms`
         } else if (isDissolving) {
-          transition = `opacity ${TRAVEL_MS}ms ease ${dot.delay}ms`
+          transition = `opacity ${TRAVEL_MS}ms ease ${dot.delay}ms, border-radius ${TRAVEL_MS * 0.5}ms ease, width ${TRAVEL_MS * 0.5}ms ease, height ${TRAVEL_MS * 0.5}ms ease`
         }
 
         return (
@@ -164,9 +164,9 @@ export default function ParticleTitle() {
               position:     'absolute',
               left,
               top,
-              width:        dot.size * 2,
-              height:       dot.size * 2,
-              borderRadius: '50%',
+              width:        isGathered ? dot.size : dot.size * 2,
+              height:       isGathered ? dot.size : dot.size * 2,
+              borderRadius: isGathered ? '1px' : '50%',
               background:   phrase.color,
               opacity,
               transition,
