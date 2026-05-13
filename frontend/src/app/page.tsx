@@ -5,6 +5,7 @@ import BriefPanel from '@/components/BriefPanel'
 import ResultsPanel from '@/components/ResultsPanel'
 import VoicePanel from '@/components/VoicePanel'
 import Header from '@/components/Header'
+import ParticleTitle from '@/components/ParticleTitle'
 
 export type ScoreAnnotation = {
   criterion: string
@@ -74,9 +75,7 @@ export default function Home() {
       <Header />
       <main className="max-w-5xl mx-auto px-4 py-10 space-y-6">
         <div className="mb-2">
-          <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '36px', letterSpacing: '-0.03em' }} className="text-gray-900 leading-tight">
-            Brief in. <span style={{ color: '#1D9E75' }}>Posts out.</span>
-          </h1>
+          <ParticleTitle />
           <p className="text-gray-700 mt-2" style={{ fontSize: '17px' }}>
             Drop a rough idea. The pipeline generates, evaluates, and revises — then hands you three platform-ready posts.
           </p>
