@@ -7,9 +7,9 @@ const PHRASES = [
   { text: 'Posts out.', color: '#1D9E75' },
 ]
 
-const CYCLE_DURATION = 2000
+const CYCLE_DURATION = 2500
 const PARTICLE_COUNT = 600
-const FONT_SIZE = 38
+const FONT_SIZE = 42
 const FONT_FAMILY = 'Syne, sans-serif'
 const FONT_WEIGHT = '800'
 
@@ -42,7 +42,7 @@ function sampleTextPixels(
   ctx.font = `${FONT_WEIGHT} ${FONT_SIZE}px ${FONT_FAMILY}`
   ctx.fillStyle = '#000'
   ctx.textBaseline = 'middle'
-  ctx.fillText(text, 8, height / 2 + 4)
+  ctx.fillText(text, 8, height / 2)
   const imageData = ctx.getImageData(0, 0, width, height)
   const pixels: Array<{ x: number; y: number }> = []
   for (let y = 0; y < height; y += 2) {
@@ -98,13 +98,19 @@ export default function ParticleTitle() {
     const run = () => {
       const ctx = canvas.getContext('2d')!
       const W = canvas.parentElement?.offsetWidth || 600
-      const H = Math.round(FONT_SIZE * 4.0)
+      const H = Math.round(FONT_SIZE * 2.4)
       canvas.width  = W
       canvas.height = H
       canvas.style.height = H + 'px'
 
       // Sample pixels for both phrases once
       const pixelSets = PHRASES.map(p => sampleTextPixels(p.text, W, H))
+
+      // Guard: if either phrase sampled zero pixels, font wasn't ready — retry
+      if (pixelSets.some(ps => ps.length < 10)) {
+        setTimeout(run, 200)
+        return
+      }
 
       // State machine:
       // phase 0 = materializing currentIndex IN
@@ -190,9 +196,12 @@ export default function ParticleTitle() {
     }
 
     if (document.fonts) {
-      document.fonts.ready.then(run)
+      document.fonts.load(`${FONT_WEIGHT} ${FONT_SIZE}px ${FONT_FAMILY}`).then(() => {
+        // Extra delay to ensure font is fully rasterizable on canvas
+        setTimeout(run, 100)
+      })
     } else {
-      setTimeout(run, 300)
+      setTimeout(run, 500)
     }
 
     return () => cancelAnimationFrame(rafRef.current)
