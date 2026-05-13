@@ -1,127 +1,130 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 const PHRASES = [
   { text: 'Brief in.', color: '#1a1a2e' },
   { text: 'Posts out.', color: '#1D9E75' },
 ]
 
-const PARTICLE_COUNT = 180
-const CYCLE_MS = 2500
+const PARTICLE_COUNT = 400
+const HOLD_MS = 2500
+const TRAVEL_MS = 1000
+const FONT_SIZE = 52
 
 type Dot = {
   id: number
-  x: number
-  y: number
   tx: number
   ty: number
+  sx: number
+  sy: number
   size: number
   delay: number
 }
 
-export default function ParticleTitle() {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [phraseIndex, setPhraseIndex] = useState(0)
-  const [dots, setDots] = useState<Dot[]>([])
-  const [animating, setAnimating] = useState<'in' | 'out'>('in')
+function sampleDots(
+  text: string,
+  W: number,
+  H: number,
+  count: number
+): Dot[] | null {
+  const offscreen = document.createElement('canvas')
+  offscreen.width = W
+  offscreen.height = H
+  const ctx = offscreen.getContext('2d')!
+  ctx.clearRect(0, 0, W, H)
+  ctx.font = `800 ${FONT_SIZE}px Syne, sans-serif`
+  ctx.fillStyle = '#000'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(text, 4, H / 2)
 
-  // Build dots from text using a hidden span to measure character positions
-  const buildDots = (index: number) => {
-    const container = containerRef.current
-    if (!container) return
-
-    const phrase = PHRASES[index]
-    const W = container.offsetWidth || 600
-    const H = 80
-
-    // Sample random positions within a bounding box shaped like the text
-    // Use a hidden canvas just for pixel sampling
-    const offscreen = document.createElement('canvas')
-    offscreen.width = W
-    offscreen.height = H
-    const ctx = offscreen.getContext('2d')!
-    ctx.font = '800 48px Syne, sans-serif'
-    ctx.fillStyle = '#000'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(phrase.text, 0, H / 2)
-
-    const imageData = ctx.getImageData(0, 0, W, H)
-    const pixels: Array<{ x: number; y: number }> = []
-    for (let y = 0; y < H; y += 2) {
-      for (let x = 0; x < W; x += 2) {
-        const idx = (y * W + x) * 4
-        if (imageData.data[idx + 3] > 128) {
-          pixels.push({ x, y })
-        }
-      }
+  const imageData = ctx.getImageData(0, 0, W, H)
+  const pixels: Array<{ x: number; y: number }> = []
+  for (let y = 0; y < H; y += 2) {
+    for (let x = 0; x < W; x += 2) {
+      const idx = (y * W + x) * 4
+      if (imageData.data[idx + 3] > 128) pixels.push({ x, y })
     }
-
-    if (pixels.length < 10) return null
-
-    const step = Math.max(1, Math.floor(pixels.length / PARTICLE_COUNT))
-    const newDots: Dot[] = []
-    for (let i = 0; i < pixels.length && newDots.length < PARTICLE_COUNT; i += step) {
-      const { x, y } = pixels[i]
-      const scatter = 60
-      newDots.push({
-        id: i,
-        tx: x,
-        ty: y,
-        x: x + (Math.random() - 0.5) * scatter * 2,
-        y: y + (Math.random() - 0.5) * scatter * 2,
-        size: Math.random() * 1.5 + 1,
-        delay: Math.random() * 400,
-      })
-    }
-    return newDots
   }
 
-  useEffect(() => {
-    const tryBuild = () => {
-      const result = buildDots(0)
-      if (result) {
-        setDots(result)
-        setAnimating('in')
-      } else {
-        setTimeout(tryBuild, 150)
-      }
-    }
+  if (pixels.length < 20) return null
 
-    if (document.fonts) {
-      document.fonts.load('800 48px Syne').then(() => setTimeout(tryBuild, 50))
-    } else {
-      setTimeout(tryBuild, 400)
+  const step = Math.max(1, Math.floor(pixels.length / count))
+  const dots: Dot[] = []
+  for (let i = 0; i < pixels.length && dots.length < count; i += step) {
+    const { x, y } = pixels[i]
+    const scatter = 100
+    dots.push({
+      id: i,
+      tx: x,
+      ty: y,
+      sx: x + (Math.random() - 0.5) * scatter * 2,
+      sy: y + (Math.random() - 0.5) * scatter * 2,
+      size: Math.random() * 1.8 + 0.8,
+      delay: Math.floor(Math.random() * 350),
+    })
+  }
+  return dots
+}
+
+// Stage: 'scattered' | 'gathered' | 'dissolving'
+type Stage = 'scattered' | 'gathered' | 'dissolving'
+
+export default function ParticleTitle() {
+  const containerRef  = useRef<HTMLDivElement>(null)
+  const [phraseIdx, setPhraseIdx] = useState(0)
+  const [dots, setDots]           = useState<Dot[]>([])
+  const [stage, setStage]         = useState<Stage>('scattered')
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clear = () => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+  }
+
+  const loadPhrase = useCallback((idx: number) => {
+    const container = containerRef.current
+    if (!container) return
+    const W = container.offsetWidth || 700
+    const H = FONT_SIZE + 32
+    const result = sampleDots(PHRASES[idx].text, W, H, PARTICLE_COUNT)
+    if (!result) {
+      timerRef.current = setTimeout(() => loadPhrase(idx), 150)
+      return
     }
+    setDots(result)
+    // Start scattered, then after one frame move to gathered
+    setStage('scattered')
+    timerRef.current = setTimeout(() => {
+      setStage('gathered')
+      // After fully gathered, hold, then dissolve
+      timerRef.current = setTimeout(() => {
+        setStage('dissolving')
+        // After dissolve, load next phrase
+        timerRef.current = setTimeout(() => {
+          const next = (idx + 1) % PHRASES.length
+          setPhraseIdx(next)
+          loadPhrase(next)
+        }, TRAVEL_MS + 400)
+      }, HOLD_MS)
+    }, 50) // 50ms for browser to paint scattered positions before transitioning
   }, [])
 
   useEffect(() => {
-    if (dots.length === 0) return
-
-    if (animating === 'in') {
-      // After fully materialized, wait then start dissolve
-      const t = setTimeout(() => {
-        setAnimating('out')
-      }, CYCLE_MS)
-      return () => clearTimeout(t)
+    const tryLoad = () => {
+      loadPhrase(0)
     }
-
-    if (animating === 'out') {
-      // After dissolved, switch phrase and materialize
-      const t = setTimeout(() => {
-        const nextIndex = (phraseIndex + 1) % PHRASES.length
-        const result = buildDots(nextIndex)
-        if (result) {
-          setPhraseIndex(nextIndex)
-          setDots(result)
-          setAnimating('in')
-        }
-      }, CYCLE_MS)
-      return () => clearTimeout(t)
+    if (document.fonts) {
+      document.fonts.load(`800 ${FONT_SIZE}px Syne`).then(() => {
+        setTimeout(tryLoad, 80)
+      })
+    } else {
+      setTimeout(tryLoad, 500)
     }
-  }, [animating, dots, phraseIndex])
+    return clear
+  }, [loadPhrase])
 
-  const phrase = PHRASES[phraseIndex]
+  const phrase = PHRASES[phraseIdx]
+  const H = FONT_SIZE + 32
 
   return (
     <div
@@ -129,26 +132,36 @@ export default function ParticleTitle() {
       style={{
         position: 'relative',
         width: '100%',
-        height: '80px',
+        height: H,
         marginBottom: '4px',
         overflow: 'visible',
       }}
     >
       {dots.map((dot) => {
-        const isIn = animating === 'in'
+        const gathered   = stage === 'gathered'
+        const dissolving = stage === 'dissolving'
+
+        const left    = gathered ? dot.tx : dot.sx
+        const top     = gathered ? dot.ty : dot.sy
+        const opacity = dissolving ? 0 : gathered ? 1 : 0
+
         return (
           <div
-            key={`${phraseIndex}-${dot.id}`}
+            key={`${phraseIdx}-${dot.id}`}
             style={{
-              position: 'absolute',
-              left: isIn ? dot.tx : dot.x,
-              top: isIn ? dot.ty : dot.y,
-              width: dot.size * 2,
-              height: dot.size * 2,
+              position:     'absolute',
+              left,
+              top,
+              width:        dot.size * 2,
+              height:       dot.size * 2,
               borderRadius: '50%',
-              background: phrase.color,
-              opacity: isIn ? 1 : 0,
-              transition: `left ${CYCLE_MS * 0.6}ms cubic-bezier(0.4,0,0.2,1) ${dot.delay}ms, top ${CYCLE_MS * 0.6}ms cubic-bezier(0.4,0,0.2,1) ${dot.delay}ms, opacity ${CYCLE_MS * 0.5}ms ease ${dot.delay}ms`,
+              background:   phrase.color,
+              opacity,
+              transition: gathered
+                ? `left ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, top ${TRAVEL_MS}ms cubic-bezier(0.25,0.46,0.45,0.94) ${dot.delay}ms, opacity ${TRAVEL_MS * 0.6}ms ease ${dot.delay}ms`
+                : dissolving
+                ? `opacity ${TRAVEL_MS}ms ease ${dot.delay}ms`
+                : 'none',
               willChange: 'left, top, opacity',
             }}
           />
