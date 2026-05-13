@@ -72,11 +72,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 py-10 space-y-6">
+        <div className="mb-2">
+          <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '36px', letterSpacing: '-0.03em' }} className="text-gray-900 leading-tight">
+            Brief in. <span style={{ color: '#1D9E75' }}>Posts out.</span>
+          </h1>
+          <p className="text-gray-500 mt-2" style={{ fontSize: '17px' }}>
+            Drop a rough idea. The pipeline generates, evaluates, and revises — then hands you three platform-ready posts.
+          </p>
+        </div>
         <VoicePanel open={voiceOpen} onToggle={() => setVoiceOpen(v => !v)} />
         <BriefPanel onGenerate={handleGenerate} loading={loading} />
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-base text-red-700">
             {error}
           </div>
         )}

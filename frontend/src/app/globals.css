@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,4 +12,10 @@
 
 body {
   background: #F8F9FA;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Syne', sans-serif;
 }

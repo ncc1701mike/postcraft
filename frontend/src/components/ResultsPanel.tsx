@@ -85,7 +85,7 @@ export default function ResultsPanel({ drafts }: Props) {
             <button
               key={d.platform}
               onClick={() => setActiveTab(d.platform)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 text-sm font-medium transition-colors border-b-2 ${
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 text-base font-medium transition-colors border-b-2 ${
                 isActive
                   ? 'border-emerald-500 text-gray-900'
                   : 'border-transparent text-gray-400 hover:text-gray-600'
@@ -96,14 +96,14 @@ export default function ResultsPanel({ drafts }: Props) {
                 {meta.label}
               </span>
               {d.score_weighted !== null && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                <span className={`text-sm px-1.5 py-0.5 rounded-full font-medium ${
                   d.passed ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-600'
                 }`}>
                   {d.score_weighted}/5
                 </span>
               )}
               {d.revision_count > 0 && (
-                <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">
+                <span className="text-sm px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">
                   rev
                 </span>
               )}
@@ -117,10 +117,10 @@ export default function ResultsPanel({ drafts }: Props) {
           {/* Post text */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Post</span>
+              <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">Post</span>
               <button
                 onClick={() => copyToClipboard(draft.post_text, draft.platform)}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
               >
                 {copied === draft.platform ? (
                   <>
@@ -140,7 +140,7 @@ export default function ResultsPanel({ drafts }: Props) {
                 )}
               </button>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap border border-gray-100">
+            <div className="bg-gray-50 rounded-lg p-4 text-base text-gray-800 leading-relaxed whitespace-pre-wrap border border-gray-100">
               {draft.post_text}
             </div>
           </div>
@@ -149,9 +149,9 @@ export default function ResultsPanel({ drafts }: Props) {
           {draft.score_weighted !== null && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Eval scores</span>
+                <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">Eval scores</span>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${
                     draft.passed
                       ? 'bg-emerald-50 text-emerald-700'
                       : 'bg-orange-50 text-orange-600'
@@ -159,7 +159,7 @@ export default function ResultsPanel({ drafts }: Props) {
                     {draft.passed ? 'PASSED' : 'FAILED'} · {draft.score_weighted}/5.0
                   </span>
                   {draft.revision_count > 0 && (
-                    <span className="text-xs text-gray-400">
+                    <span className="text-sm text-gray-400">
                       {draft.revision_count} revision{draft.revision_count > 1 ? 's' : ''}
                     </span>
                   )}

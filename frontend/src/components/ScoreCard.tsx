@@ -25,10 +25,10 @@ export default function ScoreCard({ label, score, note }: Props) {
     return (
       <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-gray-500">{label}</span>
-          <span className="text-xs text-gray-400">N/A</span>
+          <span className="text-sm text-gray-500">{label}</span>
+          <span className="text-sm text-gray-400">N/A</span>
         </div>
-        {note && <p className="text-xs text-gray-400 leading-relaxed">{note}</p>}
+        {note && <p className="text-sm text-gray-400 leading-relaxed">{note}</p>}
       </div>
     )
   }
@@ -36,8 +36,8 @@ export default function ScoreCard({ label, score, note }: Props) {
   return (
     <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs text-gray-600">{label}</span>
-        <span className={`text-xs font-semibold ${textColor(score)}`}>{score.toFixed(1)}</span>
+        <span className="text-sm text-gray-600">{label}</span>
+        <span className={`text-sm font-semibold ${textColor(score)}`}>{score.toFixed(1)}</span>
       </div>
       <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
         <div
@@ -45,7 +45,7 @@ export default function ScoreCard({ label, score, note }: Props) {
           style={{ width: `${(score / 5) * 100}%` }}
         />
       </div>
-      {note && <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">{note}</p>}
+      {note && <p className="text-sm text-gray-400 mt-1.5 leading-relaxed">{note}</p>}
     </div>
   )
 }
