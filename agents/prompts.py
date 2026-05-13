@@ -182,13 +182,13 @@ Previous post (do NOT copy — rewrite from scratch addressing the feedback):
 - End on a landing line — a short declarative sentence that closes the thought with weight.""",
 
         "instagram": """INSTAGRAM CRAFT RULES
-- Open with a scene, moment, or tension — not a claim. Pull the reader into an experience.
-- Short paragraphs. Every paragraph is one idea. Mobile readers skim.
-- The caption supports a visual — write as if the image exists even in a text-only draft.
-- No hashtags in the caption body. They go in the first comment.
-- Always end with "Link in bio." as the CTA — it is the native Instagram conversion mechanism.
-- Length: 100-200 words. Long enough to tell the story, short enough to hold attention.
-- Voice should feel like a human wrote it at 9pm, not a marketing team at 9am.""",
+- HARD LENGTH LIMIT: 150 words maximum. Count them. If over, cut.
+- Open with a scene, moment, or tension — not a claim. One or two short sentences max.
+- Every paragraph is ONE sentence or two short ones. Mobile readers skim fast.
+- No hashtags in the caption body — they go in the first comment.
+- Always end with "Link in bio." as the only CTA.
+- Voice: written at 9pm by a human, not 9am by a marketing team.
+- If it reads like LinkedIn, it's wrong. Shorten it by half and try again.""",
     }
 
     craft_guidance = platform_craft.get(platform, "")
