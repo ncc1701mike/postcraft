@@ -7,10 +7,10 @@ const PHRASES = [
   { text: 'Posts out.', color: '#1D9E75' },
 ]
 
-const PARTICLE_COUNT = 800
+const PARTICLE_COUNT = 2000
 const HOLD_MS = 2500
 const TRAVEL_MS = 1000
-const FONT_SIZE = 44
+const FONT_SIZE = 56
 
 type Dot = {
   id: number
@@ -36,12 +36,12 @@ function sampleDots(
   ctx.font = `800 ${FONT_SIZE}px Syne, sans-serif`
   ctx.fillStyle = '#000'
   ctx.textBaseline = 'middle'
-  ctx.fillText(text, 4, H / 2)
+  ctx.fillText(text, 4, H / 2 + 4)
 
   const imageData = ctx.getImageData(0, 0, W, H)
   const pixels: Array<{ x: number; y: number }> = []
-  for (let y = 0; y < H; y += 1) {
-    for (let x = 0; x < W; x += 1) {
+  for (let y = 0; y < H; y += 2) {
+    for (let x = 0; x < W; x += 2) {
       const idx = (y * W + x) * 4
       if (imageData.data[idx + 3] > 128) pixels.push({ x, y })
     }
@@ -60,7 +60,7 @@ function sampleDots(
       ty: y,
       sx: x + (Math.random() - 0.5) * scatter * 2,
       sy: y + (Math.random() - 0.5) * scatter * 2,
-      size: Math.random() * 1.8 + 0.8,
+      size: Math.random() * 0.8 + 0.4,
       delay: Math.floor(Math.random() * 350),
     })
   }
@@ -85,7 +85,7 @@ export default function ParticleTitle() {
     const container = containerRef.current
     if (!container) return
     const W = container.offsetWidth || 700
-    const H = FONT_SIZE + 48
+    const H = FONT_SIZE + 72
     const result = sampleDots(PHRASES[idx].text, W, H, PARTICLE_COUNT)
     if (!result) {
       timerRef.current = setTimeout(() => loadPhrase(idx), 150)
@@ -124,7 +124,7 @@ export default function ParticleTitle() {
   }, [loadPhrase])
 
   const phrase = PHRASES[phraseIdx]
-  const H = FONT_SIZE + 48
+  const H = FONT_SIZE + 72
 
   return (
     <div
