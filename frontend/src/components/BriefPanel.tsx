@@ -28,12 +28,12 @@ export default function BriefPanel({ onGenerate, loading }: Props) {
       <div className="flex items-center justify-between">
         <h2 className="text-base font-medium text-gray-900">Content brief</h2>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Try an example:</span>
+          <span className="text-sm text-gray-600">Try an example:</span>
           {EXAMPLE_BRIEFS.map((ex, i) => (
             <button
               key={i}
               onClick={() => setBriefText(ex)}
-              className="text-sm px-2 py-1 rounded-md border border-gray-200 text-gray-500 hover:border-emerald-300 hover:text-emerald-700 transition-colors"
+              className="text-sm px-2 py-1 rounded-md border border-gray-200 text-gray-700 hover:border-emerald-300 hover:text-emerald-700 transition-colors"
             >
               #{i + 1}
             </button>
@@ -45,13 +45,13 @@ export default function BriefPanel({ onGenerate, loading }: Props) {
         value={briefText}
         onChange={e => setBriefText(e.target.value)}
         placeholder="Paste your rough idea, a key message, a product update, a win — anything. The pipeline handles the rest."
-        className="w-full h-32 text-base text-gray-800 placeholder-gray-400 border border-gray-200 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+        className="w-full h-32 text-base text-gray-800 placeholder-gray-500 border border-gray-200 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
       />
 
       <div>
         <button
           onClick={() => setUrlOpen(u => !u)}
-          className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1"
+          className="text-sm text-gray-600 hover:text-gray-800 transition-colors flex items-center gap-1"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M4 6a2 2 0 104 0 2 2 0 00-4 0M7.5 4.5l1-1a2.121 2.121 0 013 3l-2 2M4.5 7.5l-1 1a2.121 2.121 0 01-3-3l2-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
@@ -70,7 +70,7 @@ export default function BriefPanel({ onGenerate, loading }: Props) {
       </div>
 
       <div className="flex items-center justify-between pt-1">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-600">
           Generates LinkedIn · Twitter/X · Instagram — evaluated and revised by the pipeline
         </p>
         <button

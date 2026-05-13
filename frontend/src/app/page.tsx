@@ -77,7 +77,7 @@ export default function Home() {
           <h1 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '36px', letterSpacing: '-0.03em' }} className="text-gray-900 leading-tight">
             Brief in. <span style={{ color: '#1D9E75' }}>Posts out.</span>
           </h1>
-          <p className="text-gray-500 mt-2" style={{ fontSize: '17px' }}>
+          <p className="text-gray-700 mt-2" style={{ fontSize: '17px' }}>
             Drop a rough idea. The pipeline generates, evaluates, and revises — then hands you three platform-ready posts.
           </p>
         </div>

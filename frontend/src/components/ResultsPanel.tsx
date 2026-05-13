@@ -88,7 +88,7 @@ export default function ResultsPanel({ drafts }: Props) {
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 text-base font-medium transition-colors border-b-2 ${
                 isActive
                   ? 'border-emerald-500 text-gray-900'
-                  : 'border-transparent text-gray-400 hover:text-gray-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-800'
               }`}
             >
               <span className="flex items-center gap-1.5">
@@ -103,7 +103,7 @@ export default function ResultsPanel({ drafts }: Props) {
                 </span>
               )}
               {d.revision_count > 0 && (
-                <span className="text-sm px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">
+                <span className="text-sm px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600">
                   rev
                 </span>
               )}
@@ -117,10 +117,10 @@ export default function ResultsPanel({ drafts }: Props) {
           {/* Post text */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">Post</span>
+              <span className="text-sm font-medium text-gray-700 uppercase tracking-wide">Post</span>
               <button
                 onClick={() => copyToClipboard(draft.post_text, draft.platform)}
-                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
+                className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-700 transition-colors"
               >
                 {copied === draft.platform ? (
                   <>
@@ -149,7 +149,7 @@ export default function ResultsPanel({ drafts }: Props) {
           {draft.score_weighted !== null && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">Eval scores</span>
+                <span className="text-sm font-medium text-gray-700 uppercase tracking-wide">Eval scores</span>
                 <div className="flex items-center gap-2">
                   <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${
                     draft.passed
@@ -159,7 +159,7 @@ export default function ResultsPanel({ drafts }: Props) {
                     {draft.passed ? 'PASSED' : 'FAILED'} · {draft.score_weighted}/5.0
                   </span>
                   {draft.revision_count > 0 && (
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-gray-600">
                       {draft.revision_count} revision{draft.revision_count > 1 ? 's' : ''}
                     </span>
                   )}

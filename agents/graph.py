@@ -25,6 +25,7 @@ from agents.prompts import (
     eval_user,
 )
 from agents.supabase_client import load_voice_profile, load_exemplars, save_run
+from agents.humanizer import humanize_post
 from utils.url_fetcher import fetch_url_text
 
 load_dotenv()
@@ -278,12 +279,12 @@ async def generate_platform(state: PostcraftState) -> PostcraftState:
 # ============================================================
 
 async def eval_agent(state: PostcraftState) -> PostcraftState:
-    print("[4] eval_agent")
+    print("[4] eval_agent — parallel")
+    import asyncio
 
     llm = get_llm(temperature=0.0)
-    scored_drafts = []
 
-    for draft in (state.get("drafts") or []):
+    async def score_single(draft):
         platform  = draft["platform"]
         post_text = draft["post_text"]
 
@@ -310,7 +311,7 @@ async def eval_agent(state: PostcraftState) -> PostcraftState:
             match = re.search(r'\{.*\}', raw, re.DOTALL)
             scores = json.loads(match.group()) if match else {}
 
-        scored_drafts.append({
+        return {
             **draft,
             "score_brief":       scores.get("score_brief"),
             "score_platform":    scores.get("score_platform"),
@@ -322,9 +323,35 @@ async def eval_agent(state: PostcraftState) -> PostcraftState:
             "score_annotations": scores.get("annotations", []),
             "passed":            scores.get("passed", False),
             "revision_guidance": scores.get("revision_guidance", ""),
-        })
+        }
 
-    return {**state, "drafts": scored_drafts}
+    scored_drafts = await asyncio.gather(*[score_single(d) for d in (state.get("drafts") or [])])
+    return {**state, "drafts": list(scored_drafts)}
+
+
+# ============================================================
+# NODE 4b — Humanizer
+# ============================================================
+
+async def humanizer_node(state: PostcraftState) -> PostcraftState:
+    print("[4b] humanizer_node — parallel")
+    import asyncio
+
+    core_message = state.get("core_message", "")
+    vp   = state.get("voice_profile") or {}
+    temp = float(vp.get("model_temp", 0.85))
+
+    async def humanize_single(draft):
+        humanized_text = await humanize_post(
+            platform=draft["platform"],
+            post_text=draft["post_text"],
+            core_message=core_message,
+            temperature=temp,
+        )
+        return {**draft, "post_text": humanized_text}
+
+    humanized_drafts = await asyncio.gather(*[humanize_single(d) for d in (state.get("drafts") or [])])
+    return {**state, "drafts": list(humanized_drafts)}
 
 
 # ============================================================
@@ -422,6 +449,7 @@ def build_graph() -> StateGraph:
     g.add_node("evaluate",          eval_agent)
     g.add_node("gate",              revision_gate)
     g.add_node("revise",            revision_dispatcher)
+    g.add_node("humanize",          humanizer_node)
     g.add_node("format_output",     output_formatter)
 
     g.set_entry_point("analyze_brief")
@@ -445,7 +473,7 @@ def build_graph() -> StateGraph:
         should_revise,
         {
             "revise": "revise",
-            "format": "format_output",
+            "format": "humanize",
         }
     )
 
@@ -455,6 +483,7 @@ def build_graph() -> StateGraph:
         ["generate_platform"],
     )
 
+    g.add_edge("humanize",      "format_output")
     g.add_edge("format_output", END)
 
     return g
