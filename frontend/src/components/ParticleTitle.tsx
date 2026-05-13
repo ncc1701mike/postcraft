@@ -7,9 +7,9 @@ const PHRASES = [
   { text: 'Posts out.', color: '#1D9E75' },
 ]
 
-const CYCLE_DURATION = 1000
+const CYCLE_DURATION = 1500
 const PARTICLE_COUNT = 600
-const FONT_SIZE = 52
+const FONT_SIZE = 48
 const FONT_FAMILY = 'Syne, sans-serif'
 const FONT_WEIGHT = '800'
 
@@ -56,21 +56,25 @@ function sampleTextPixels(
   return pixels
 }
 
+function makeScatterOrigin(tx: number, ty: number, scatter: number) {
+  return {
+    ox: tx + (Math.random() - 0.5) * scatter * 2,
+    oy: ty + (Math.random() - 0.5) * scatter * 2,
+  }
+}
+
 function buildParticles(
   pixels: Array<{ x: number; y: number }>,
   color: string,
-  canvasWidth: number,
-  canvasHeight: number
 ): Particle[] {
   if (pixels.length === 0) return []
   const result: Particle[] = []
   const count = Math.min(PARTICLE_COUNT, pixels.length)
   const step = Math.max(1, Math.floor(pixels.length / count))
+  const scatter = 80
   for (let i = 0; i < pixels.length && result.length < count; i += step) {
     const { x, y } = pixels[i]
-    const scatter = 80
-    const ox = x + (Math.random() - 0.5) * scatter * 2
-    const oy = y + (Math.random() - 0.5) * scatter * 2
+    const { ox, oy } = makeScatterOrigin(x, y, scatter)
     result.push({
       tx: x, ty: y,
       ox, oy,
@@ -91,23 +95,26 @@ export default function ParticleTitle() {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    // Wait for fonts to load before sampling
     const run = () => {
       const ctx = canvas.getContext('2d')!
       const W = canvas.parentElement?.offsetWidth || 600
-      const H = Math.round(FONT_SIZE * 2.2)
+      const H = Math.round(FONT_SIZE * 3.0)
       canvas.width  = W
       canvas.height = H
       canvas.style.height = H + 'px'
 
+      // Sample pixels for both phrases once
       const pixelSets = PHRASES.map(p => sampleTextPixels(p.text, W, H))
 
+      // State machine:
+      // phase 0 = materializing phraseIndex IN
+      // phase 1 = crossfading phraseIndex OUT while (phraseIndex+1) materializes IN
       let phraseIndex = 0
-      let phase       = 0   // 0 = materialize in, 1 = crossfade
+      let phase       = 0
       let phaseStart  = performance.now()
 
-      let particles     = buildParticles(pixelSets[0], PHRASES[0].color, W, H)
-      let nextParticles: Particle[] = []
+      let current: Particle[] = buildParticles(pixelSets[0], PHRASES[0].color)
+      let next: Particle[]    = []
 
       function tick(now: number) {
         const elapsed = now - phaseStart
@@ -117,8 +124,8 @@ export default function ParticleTitle() {
         ctx.clearRect(0, 0, W, H)
 
         if (phase === 0) {
-          // Materialize current phrase in
-          for (const p of particles) {
+          // --- MATERIALIZE current phrase in ---
+          for (const p of current) {
             p.x = p.ox + (p.tx - p.ox) * e
             p.y = p.oy + (p.ty - p.oy) * e
             ctx.globalAlpha = e
@@ -129,31 +136,34 @@ export default function ParticleTitle() {
           }
 
           if (t >= 1) {
-            phase      = 1
+            // Fully materialized — prepare next phrase for crossfade
+            const ni = (phraseIndex + 1) % PHRASES.length
+            next     = buildParticles(pixelSets[ni], PHRASES[ni].color)
+            phase     = 1
             phaseStart = now
-            const ni   = (phraseIndex + 1) % PHRASES.length
-            nextParticles = buildParticles(pixelSets[ni], PHRASES[ni].color, W, H)
           }
 
         } else {
-          // Crossfade: dissolve current, materialize next simultaneously
-          const eCurr = 1 - e
-          const eNext = e
+          // --- CROSSFADE: dissolve current, materialize next simultaneously ---
+          const eFade = e       // next materializes: 0→1
+          const eDiss = 1 - e  // current dissolves: 1→0
 
-          for (const p of particles) {
-            const dx = (p.ox - p.tx) * (1 - eCurr)
-            const dy = (p.oy - p.ty) * (1 - eCurr)
-            ctx.globalAlpha = Math.max(0, eCurr)
+          // Dissolve current
+          for (const p of current) {
+            const dx = (p.ox - p.tx) * (1 - eDiss)
+            const dy = (p.oy - p.ty) * (1 - eDiss)
+            ctx.globalAlpha = Math.max(0, eDiss)
             ctx.fillStyle   = p.color
             ctx.beginPath()
             ctx.arc(p.tx + dx, p.ty + dy, p.size, 0, Math.PI * 2)
             ctx.fill()
           }
 
-          for (const p of nextParticles) {
-            p.x = p.ox + (p.tx - p.ox) * eNext
-            p.y = p.oy + (p.ty - p.oy) * eNext
-            ctx.globalAlpha = Math.max(0, eNext)
+          // Materialize next
+          for (const p of next) {
+            p.x = p.ox + (p.tx - p.ox) * eFade
+            p.y = p.oy + (p.ty - p.oy) * eFade
+            ctx.globalAlpha = Math.max(0, eFade)
             ctx.fillStyle   = p.color
             ctx.beginPath()
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
@@ -161,18 +171,21 @@ export default function ParticleTitle() {
           }
 
           if (t >= 1) {
-            phraseIndex   = (phraseIndex + 1) % PHRASES.length
-            particles     = nextParticles
-            nextParticles = []
-            phase         = 0
-            phaseStart    = now
+            // Crossfade complete — advance phrase, reset for next materialize
+            phraseIndex = (phraseIndex + 1) % PHRASES.length
+            current     = next
+            next        = []
+            // Give current particles new scatter origins for next dissolve
             const scatter = 80
-            for (const p of particles) {
-              p.ox = p.tx + (Math.random() - 0.5) * scatter * 2
-              p.oy = p.ty + (Math.random() - 0.5) * scatter * 2
-              p.x  = p.ox
-              p.y  = p.oy
+            for (const p of current) {
+              const { ox, oy } = makeScatterOrigin(p.tx, p.ty, scatter)
+              p.ox = ox
+              p.oy = oy
+              p.x  = p.tx
+              p.y  = p.ty
             }
+            phase      = 0
+            phaseStart = now
           }
         }
 
@@ -183,7 +196,6 @@ export default function ParticleTitle() {
       rafRef.current = requestAnimationFrame(tick)
     }
 
-    // Wait for Syne font to be available
     if (document.fonts) {
       document.fonts.ready.then(run)
     } else {
