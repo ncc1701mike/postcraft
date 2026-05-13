@@ -7,9 +7,9 @@ const PHRASES = [
   { text: 'Posts out.', color: '#1D9E75' },
 ]
 
-const CYCLE_DURATION = 1500
+const CYCLE_DURATION = 2000
 const PARTICLE_COUNT = 600
-const FONT_SIZE = 48
+const FONT_SIZE = 38
 const FONT_FAMILY = 'Syne, sans-serif'
 const FONT_WEIGHT = '800'
 
@@ -42,7 +42,7 @@ function sampleTextPixels(
   ctx.font = `${FONT_WEIGHT} ${FONT_SIZE}px ${FONT_FAMILY}`
   ctx.fillStyle = '#000'
   ctx.textBaseline = 'middle'
-  ctx.fillText(text, 8, height / 2)
+  ctx.fillText(text, 8, height / 2 + 4)
   const imageData = ctx.getImageData(0, 0, width, height)
   const pixels: Array<{ x: number; y: number }> = []
   for (let y = 0; y < height; y += 2) {
@@ -98,7 +98,7 @@ export default function ParticleTitle() {
     const run = () => {
       const ctx = canvas.getContext('2d')!
       const W = canvas.parentElement?.offsetWidth || 600
-      const H = Math.round(FONT_SIZE * 3.0)
+      const H = Math.round(FONT_SIZE * 4.0)
       canvas.width  = W
       canvas.height = H
       canvas.style.height = H + 'px'
@@ -107,11 +107,11 @@ export default function ParticleTitle() {
       const pixelSets = PHRASES.map(p => sampleTextPixels(p.text, W, H))
 
       // State machine:
-      // phase 0 = materializing phraseIndex IN
-      // phase 1 = crossfading phraseIndex OUT while (phraseIndex+1) materializes IN
-      let phraseIndex = 0
-      let phase       = 0
-      let phaseStart  = performance.now()
+      // phase 0 = materializing currentIndex IN
+      // phase 1 = crossfading currentIndex OUT while nextIndex materializes IN
+      let currentIndex = 0
+      let phase        = 0
+      let phaseStart   = performance.now()
 
       let current: Particle[] = buildParticles(pixelSets[0], PHRASES[0].color)
       let next: Particle[]    = []
@@ -124,7 +124,6 @@ export default function ParticleTitle() {
         ctx.clearRect(0, 0, W, H)
 
         if (phase === 0) {
-          // --- MATERIALIZE current phrase in ---
           for (const p of current) {
             p.x = p.ox + (p.tx - p.ox) * e
             p.y = p.oy + (p.ty - p.oy) * e
@@ -136,19 +135,16 @@ export default function ParticleTitle() {
           }
 
           if (t >= 1) {
-            // Fully materialized — prepare next phrase for crossfade
-            const ni = (phraseIndex + 1) % PHRASES.length
-            next     = buildParticles(pixelSets[ni], PHRASES[ni].color)
-            phase     = 1
-            phaseStart = now
+            const nextIndex = (currentIndex + 1) % PHRASES.length
+            next            = buildParticles(pixelSets[nextIndex], PHRASES[nextIndex].color)
+            phase           = 1
+            phaseStart      = now
           }
 
         } else {
-          // --- CROSSFADE: dissolve current, materialize next simultaneously ---
-          const eFade = e       // next materializes: 0→1
-          const eDiss = 1 - e  // current dissolves: 1→0
+          const eFade = e
+          const eDiss = 1 - e
 
-          // Dissolve current
           for (const p of current) {
             const dx = (p.ox - p.tx) * (1 - eDiss)
             const dy = (p.oy - p.ty) * (1 - eDiss)
@@ -159,7 +155,6 @@ export default function ParticleTitle() {
             ctx.fill()
           }
 
-          // Materialize next
           for (const p of next) {
             p.x = p.ox + (p.tx - p.ox) * eFade
             p.y = p.oy + (p.ty - p.oy) * eFade
@@ -171,11 +166,9 @@ export default function ParticleTitle() {
           }
 
           if (t >= 1) {
-            // Crossfade complete — advance phrase, reset for next materialize
-            phraseIndex = (phraseIndex + 1) % PHRASES.length
-            current     = next
-            next        = []
-            // Give current particles new scatter origins for next dissolve
+            currentIndex = (currentIndex + 1) % PHRASES.length
+            current      = next
+            next         = []
             const scatter = 80
             for (const p of current) {
               const { ox, oy } = makeScatterOrigin(p.tx, p.ty, scatter)
