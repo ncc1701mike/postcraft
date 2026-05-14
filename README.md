@@ -2,8 +2,9 @@
 
 > From rough brief to platform-ready posts — crafted, evaluated, and revised by an agent pipeline.
 
-**Live demo:** https://postcraft.vercel.app
+**Live demo:** https://postcraft-eight.vercel.app
 **API:** https://postcraft-production-0a23.up.railway.app/health
+**Docs:** [What was used and why](docs/what-was-used-and-why.md)
 
 ---
 
